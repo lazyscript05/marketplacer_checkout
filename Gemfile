@@ -5,8 +5,7 @@ ruby '3.4.2'
 
 # Dependencies for this project
 
-# RSpec for testing
 gem 'rspec', '~> 3.13'
+gem 'interactor', '~> 3.0'
+gem 'brakeman'
 
-# Pry for debugging (optional but handy)
-gem 'pry', '~> 0.15.2'

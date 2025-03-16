@@ -1,10 +1,13 @@
 require_relative '../app/services/product_loader'
 require_relative '../app/models/cart'
+require_relative '../app/interactors/load_products'
+require_relative '../app/interactors/add_to_cart'
+require_relative '../app/interactors/checkout'
 
 class CLI
   def initialize
-    @products = ProductLoader.load_products
     @cart = Cart.new
+    load_products
   end
 
   def run
@@ -24,6 +27,11 @@ class CLI
   end
 
   private
+
+  def load_products
+    result = LoadProducts.call
+    @products = result.products
+  end
 
   def display_menu
     puts "\n--- 🛒 Marketplacer Checkout ---"
@@ -51,11 +59,12 @@ class CLI
     input = gets.chomp.strip
     product = @products.find { |p| p.uuid.to_s == input }
 
-    if product
-      @cart.add_product(product)
-      puts "✅ #{product.name} has been added to your cart."
+    result = AddToCart.call(product: product, cart: @cart)
+
+    if result.success?
+      puts "✅ #{result.message}"
     else
-      puts "❌ Product with UUID '#{input}' not found. Please try again."
+      puts "❌ #{result.message}"
     end
   end
 
@@ -69,13 +78,15 @@ class CLI
   end
 
   def checkout
-    if @cart.items.empty?
-      puts "\n⚠️ Your cart is empty. Please add products before checking out."
-    else
+    result = Checkout.call(cart: @cart)
+
+    if result.success?
       puts "\n💳 --- Checkout ---"
-      puts @cart.summary
-      puts "\n🎉 Thank you for your purchase!"
+      puts result.summary
+      puts "\n🎉 #{result.message}"
       exit_program
+    else
+      puts "\n⚠️ #{result.message}"
     end
   end
 
